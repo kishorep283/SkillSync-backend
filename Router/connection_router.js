@@ -1,0 +1,10 @@
+let express = require("express");
+let middleware =require("../middleware/middleware");
+let router = express.Router();
+let controler = require("../Controllers/connections_controller");
+router.get("/",controler.root);
+router.post("/assign/:email",middleware,controler.assign);
+router.get("/requests/:email",middleware,controler.requests);
+router.get("/response/:action/:email",middleware,controler.response);
+router.get("/friends/:email",middleware,controler.friends);
+module.exports=router;

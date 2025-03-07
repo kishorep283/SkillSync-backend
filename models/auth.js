@@ -12,12 +12,20 @@ const RegSchema = new mongoose.Schema({
     lastname:String,
     email:String,
     image:String,
-    Address:String,
+    country:String,
     company:String,
-    profession:String,
-    About:String,
+    job_title:String,
+    about:String,
+    description:String,
+    price:String,
     skills:[String]
+})
+const ConnectionSchema = new mongoose.Schema({
+    useremail:String,
+    requests:[],
+    status:[]
 })
 const Sign = mongoose.model("Authentication",authSchema);
 const profile = mongoose.model("Profile",RegSchema);
-module.exports={Sign,profile}
+const connections = mongoose.model("Connections",ConnectionSchema);
+module.exports={Sign,profile,connections}

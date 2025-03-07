@@ -9,11 +9,11 @@ const register = async(req,res)=>{
     let {email,password,firstname,lastname}=req.body;
     const data = await model.Sign.find({email});
     if(data.length>0){
-        res.send({message:"User Already Exixts"});
+        res.status(400).send({message:"User Already Exixts"});
     }else{
         let hashed_pswd = await bcrypt.hash(password,10);
         await model.Sign.create({email:email,password:hashed_pswd,firstname:firstname,lastname:lastname});
-        res.send({message:"user Registered Successfully"});
+        res.status(200).send({message:"user Registered Successfully"});
     }
 }
 const login = async (req,res)=>{
@@ -21,17 +21,19 @@ const login = async (req,res)=>{
     let data = await model.Sign.find({email});
     // console.log(data);
     if(data.length<1){
-        res.send({message:""});
+        res.status(400).send({message:"user not found"});
     }
     else{
         let verification =await bcrypt.compare(password,data[0].password);
         if(!verification){
-            res.send({message:"Invalid Credintials"});
+            res.status(400).send({message:"Invalid Credintials"});
         }else{
             let token = await jwt.sign({email:email},process.env.SECRET_KEY);
-            res.send({message:"Login Successfull",token:token})
+            console.log(token)
+            res.status(200).send({message:"Login Successfull",token})
         }
     }
+    
 }
 const google_login = async(req,res)=>{
     const { email, name } = req.body;
@@ -44,36 +46,59 @@ const google_login = async(req,res)=>{
     }
     // console.log(user);
     const token = jwt.sign({ email: user.email}, process.env.SECRET_KEY, { expiresIn: "3h" });
-    res.json({ token, message: "Google Login Successful" });
+    res.status(200).json({ token, message: "Google Login Successful" });
 }
 const profile = async (req,res)=>{
-    let {firstname,lastname,email,Address,company,profession,About,skills}=req.body;
-    await model.profile.create({firstname:firstname,lastname:lastname,email:email,Address:Address,company:company,profession:profession,
-        About:About,skills:skills,image:req.file?req.file.path:null
-    })
-    res.send({message:"Account Created Successfull"});
+    let {country,company,job_title,about,skills,description,price}=req.body;
+    let email = req.user.email;
+    let userData = await model.Sign.findOne({email});
+    console.log(userData);
+    let firstname =userData.firstname ? userData.firstname: userData.name.split(" ")[0];
+    let lastname =userData.lastname ? userData.lastname : userData.name.split(" ")[1];
+    let imagePath = `http://localhost:3002/uploads/${req.file.filename}`;
+    console.log(req.file);
+    try{
+        let data =await model.profile.find({email});
+        if(data.length>0){
+            res.status(400).send({message:"User Already Exixted"});
+        }else{
+            await model.profile.create({firstname:firstname,lastname:lastname,email:email,country:country,company:company,job_title:job_title,price:price,
+                about:about,description:description,skills:skills,image:req.file?imagePath:null
+            })
+            res.status(200).send({message:"Account Created Successfull"});
+        }
+    } 
+    catch(err){
+        res.status(500).send({message:"Error Occured At server"});
+    }
 }
 const profile_check =async(req,res)=>{
-    let rest = req.headers["authorization"].split(" ")[1];
-    // console.log(rest);
-    let data = jwt.verify(rest,process.env.SECRET_KEY);
-    // console.log(data);
-    let {email}=data;
-    // console.log(email);
-    let response =await model.Sign.find({email});
-    if(response.length<0){
-        res.send({message:"User Profile Not Created",response:""});
+    let email = req.user.email;
+    console.log(email);
+    let data = await model.Sign.findOne({email});
+    if(!data){
+        res.send({message:"No user found"});
     }else{
-        res.send({response:response});
+        res.send({message:data});
     }
-
+}
+const getData =async(req,res)=>{
+    let email =req.user.email;
+    console.log(email);
+    let data =await model.profile.find({email});
+    console.log(data);
+    if(data.length<1){
+        res.status(200).send({message:"no data please create profile"});
+    }else{
+        res.status(200).send({message:data[0]});
+    }
 }
 const All_data=async (req,res)=>{
     let AllData =await model.profile.find();
     if(AllData.length<0){
-        res.send({message:"No users Found"});
+        res.status(400).send({message:"No users Found"});
     }else{
-        res.send({data:AllData});
+        res.status(200).send({message:AllData});
     }
 }
-module.exports ={register,root,login,profile,profile_check,All_data,google_login};
+module.exports ={register,root,login,profile_check,profile,profile,All_data,google_login,getData};
