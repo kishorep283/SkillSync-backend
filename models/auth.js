@@ -12,18 +12,23 @@ const RegSchema = new mongoose.Schema({
     lastname:String,
     email:String,
     image:String,
+    filename:String,
     country:String,
     company:String,
     job_title:String,
     about:String,
     description:String,
+    file:String,
     price:String,
+    token:String,
     skills:[String]
 })
 const ConnectionSchema = new mongoose.Schema({
     useremail:String,
     requests:[],
-    status:[]
+    memborship_requests:[],
+    status:[],
+    membership:[]
 })
 const Sign = mongoose.model("Authentication",authSchema);
 const profile = mongoose.model("Profile",RegSchema);

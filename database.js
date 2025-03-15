@@ -3,8 +3,8 @@ require("dotenv").config();
 async function dbConnect(){
     try{
         await mongoose.connect(`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_pASSWORD}@${process.env.DB_CLUSTER}.4hiyp.mongodb.net/Auth?retryWrites=true&w=majority&appName=Cluster-main`,{
-            serverSelectionTimeoutMS: 100000, // Increase timeout
-            connectTimeoutMS: 60000 // Connection timeout
+            serverSelectionTimeoutMS: 1000000, // Increase timeout
+            connectTimeoutMS: 100000 // Connection timeout
         })
         console.log("database connected");
     }

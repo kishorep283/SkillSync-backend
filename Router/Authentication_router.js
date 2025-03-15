@@ -3,27 +3,12 @@ let app=express();
 let router = express.Router();
 let multer =require("multer");
 require("dotenv").config();
-let {S3Client} =require("@aws-sdk/client-s3");
+// let {S3Client} =require("@aws-sdk/client-s3");
 let path=require("path");
 let middleware=require("../middleware/middleware.js");
-let storage = multer.diskStorage({
-    destination:(req,file,cb)=>{
-        cb(null, path.join(__dirname, "../uploads"));
-    },
-    filename:(req,file,cb)=>{
-        cb(null,Date.now()+file.originalname);
-    }
-})
-let upload = multer({storage:storage});
-let s3Clientconfig = new S3Client({
-    region:process.env.REGION,
-    credentials:{
-        accessKeyId:process.env.ACCESS_KEY,
-        secretAccessKey:process.env.SECRET_ACCESS_KEY
 
-    }
-})
-const Bucketname= process.env.BUCKETNAME
+let upload = multer({storage:multer.memoryStorage()});
+
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 let Auth_control = require("../Controllers/Authentication_controller.js");
 router.get("/",Auth_control.root);
