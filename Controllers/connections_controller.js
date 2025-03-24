@@ -164,14 +164,14 @@ const response =async(req,res)=>{
                         useremail: responseemail,
                         membership: [email]
                     });
-                    profiledata.token=token;
                 }else{
                     respdata.membership.push(email);
                     respdata.save();
                 }
+                profiledata.token=token;
                 res.status(200).send({message:"Accepted the user"});
             }else{
-                profiledata.token=token;
+                // profiledata.token=token;
                 currdata.memborship_requests = currdata.memborship_requests.filter(item=>item!=responseemail);
                 currdata.save();
                 res.send({message:"Rejects the user"});
@@ -208,20 +208,19 @@ const friends = async(req,res)=>{
 /// Api for showing who takes memborship
 const memborships =async(req,res)=>{
     let email =req.user.email;
-    let data =await connections.find({useremail:email});
+    console.log("user email" ,email);
+    let data =await connections.findOne({useremail:email});
     console.log(data);
-    console.log("i'm entering into memborships")
-    // console.log(data.membership.length);
-    
     try{
-        console.log("i'm in try block")
-        if(!data.membership?.length){
+        // console.log("i'm in try block")
+        if(data.membership?.length===0){
             console.log("i'm entering into membership zone")
             res.status(400).send({message:["You have No friends, Please take memborships"]});
         }
         else{
             console.log("i'm entering into else ")
             const list = await profile.find({email:{$in:data.membership}});
+            console.log(list)
             res.status(200).send({message:list});        
         }
     }
@@ -270,8 +269,11 @@ const payment =async(req,res)=>{
 const deletemember =async(req,res)=>{
     let email = req.user.email;
     let deletemail = req.params.email;
+    console.log("email",email);
+    console.log("deletemail",deletemail);
     let data =await connections.findOne({useremail:email});
     try{
+        console.log("i'm in delete mail code")
         if(!data){
             res.status(400).send("invalid requeest");
         }else{
@@ -286,9 +288,12 @@ const deletemember =async(req,res)=>{
     }
 }
 const mail = async(req,res)=>{
-    let sender = req.user.mail;
-    let reciever = req.params.mail;
+    let sender = req.user.email;
+    let reciever = req.params.email;
     let {data}=req.body;
+    console.log("sender",sender);
+    console.log("receiver",reciever);
+    console.log("data",data);
     try{
         var mailoptions ={
             from:sender,

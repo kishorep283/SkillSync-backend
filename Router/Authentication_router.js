@@ -20,3 +20,4 @@ router.post("/create-profile",upload.single("image"),middleware,Auth_control.pro
 router.get("/profile_data/:email",middleware,Auth_control.getData);
 router.get("/AllData",Auth_control.All_data);
 module.exports=router;
+
