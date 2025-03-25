@@ -7,13 +7,13 @@ dbConnect();
 const server =http.createServer(app);
 const io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173","http://localhost:5174"],
+      origin: ["http://localhost:5173","http://localhost:5174", "https://skill-sync-front-end-fisk.vercel.app"],
       credentials: true,
     },
 });
 app.use(express.json());
 let cors=require("cors");
-app.use(cors({ origin: ["http://localhost:5173","http://localhost:5174"], credentials: true }));
+app.use(cors({ origin: ["http://localhost:5173","http://localhost:5174", "https://skill-sync-front-end-fisk.vercel.app"], credentials: true }));
 let AuthRouter = require("./Router/Authentication_router.js");
 let connectionRouter  =require("./Router/connection_router.js");
 app.use("/Auth",AuthRouter);
