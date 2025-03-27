@@ -146,6 +146,16 @@ const profile_check = async (req, res) => {
     res.send({ message: data });
   }
 };
+
+const Get_Profile =async(req,res)=>{
+  let id =req.params.id;
+  let data = await model.profile.findOne({_id:id});
+  if(!data){
+    return res.status(404).send({message:"No User Found"});
+  }else{
+    return res.status(200).send({message:data});
+  }
+}
 const GetObjectURL = async (s3Key) => {
   const command = new GetObjectCommand({ Bucket: Bucketname, Key: s3Key });
   return await getSignedUrl(s3Clientconfig, command, { ExpiresIn: 604800 });
@@ -256,5 +266,6 @@ module.exports = {
   All_data,
   google_login,
   getData,
-  Profile_valid
+  Profile_valid,
+  Get_Profile
 };
