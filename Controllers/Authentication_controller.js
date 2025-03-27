@@ -147,19 +147,29 @@ const profile_check = async (req, res) => {
   }
 };
 
+const GetObjectURL = async (s3Key) => {
+  const command = new GetObjectCommand({ Bucket: Bucketname, Key: s3Key });
+  return await getSignedUrl(s3Clientconfig, command, { ExpiresIn: 604800 });
+};
 const Get_Profile =async(req,res)=>{
   let id =req.params.id;
   let data = await model.profile.findOne({_id:id});
   if(!data){
     return res.status(404).send({message:"No User Found"});
   }else{
-    return res.status(200).send({message:data});
+    const files = await Promise.all(
+      data.map(async ({ filename, image }) => ({
+        filename: filename,
+        fileUrl: await GetObjectURL(image),
+      }))
+    );
+    let updateData = await model.profile.updateOne(
+      { email: data[0].email },
+      { $set: { file: files[0].fileUrl } }
+    );
+    res.status(200).send({message:data});
   }
 }
-const GetObjectURL = async (s3Key) => {
-  const command = new GetObjectCommand({ Bucket: Bucketname, Key: s3Key });
-  return await getSignedUrl(s3Clientconfig, command, { ExpiresIn: 604800 });
-};
 const getData = async (req, res) => {
   let email = req.user.email;
   console.log(email);
@@ -176,8 +186,6 @@ const getData = async (req, res) => {
         fileUrl: await GetObjectURL(image),
       }))
     );
-    // console.log(files);
-    // console.log("URL file",files[0]);
     let updateData = await model.profile.updateOne(
       { email: data[0].email },
       { $set: { file: files[0].fileUrl } }
