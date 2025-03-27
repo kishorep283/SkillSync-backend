@@ -170,7 +170,7 @@ const getData = async (req, res) => {
 };
 const All_data = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search,tags,job_titles,company } = req.query;
     let data;
     if (search) {
       const searchData = await model.profile.find({
@@ -187,26 +187,40 @@ const All_data = async (req, res) => {
       }
 
       data = searchData;
-    } else {
+    }else if(tags){
+      const tagsData = await model.profile.find({
+        skills: { $in: tags }
+      })
+      if(tagsData.length===0){
+        return res.status(400).send({message:"No matching profiles found"});
+      }
+      data = tagsData;
+    }
+    else if(job_titles){
+      const JobsData = await model.profile.find({
+        job_title: { $regex: new RegExp(job_titles, "i") }
+      })
+      if(JobsData.length===0){
+        return res.status(400).send({message:"NO matching profiles Found"});
+      }
+      data = JobsData;
+    }
+    else if(company){
+      const CompanyData = await model.find({
+        company: { $regex: new RegExp(company, "i") }
+      })
+      if(CompanyData.length===0){
+        return res.status(400).send({message:"NO matching Profiles found"});
+      }
+      data=CompanyData;
+    }
+    else {
       let AllData = await model.profile.find();
 
       if (AllData.length === 0) {
         return res.status(400).send({ message: "No Profiles Found" });
       }
       data = AllData;
-      // Generate signed URLs and update both the object and the database
-      // await Promise.all(
-      //   AllData.map(async (data) => {
-      //     const fileUrl = await GetObjectURL(data.image);
-      //     // Update the file URL in the database
-      //     await model.profile.updateOne(
-      //       { email: data.email },
-      //       { $set: { file: fileUrl } }
-      //     );
-      //   })
-      // );
-
-      // res.status(200).send({message: AllData });
     }
     const updatedData = await Promise.all(
         data.map(async (item) => {
