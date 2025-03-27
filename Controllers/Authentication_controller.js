@@ -153,7 +153,8 @@ const GetObjectURL = async (s3Key) => {
 };
 const Get_Profile =async(req,res)=>{
   let id =req.params.id;
-  let data = await model.profile.findOne({_id:id});
+  console.log(id)
+  let data = await model.profile.find({_id:id});
   if(!data){
     return res.status(404).send({message:"No User Found"});
   }else{
@@ -163,6 +164,7 @@ const Get_Profile =async(req,res)=>{
         fileUrl: await GetObjectURL(image),
       }))
     );
+    console.log(files)
     let updateData = await model.profile.updateOne(
       { email: data[0].email },
       { $set: { file: files[0].fileUrl } }
