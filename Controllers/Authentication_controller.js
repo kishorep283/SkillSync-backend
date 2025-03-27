@@ -126,6 +126,16 @@ const profile = async (req, res) => {
     res.status(500).send({ message: "Error Occured At server" });
   }
 };
+const Profile_valid = async (req,res)=>{
+  let email =req.params.email;
+  let data = await model.profile.findOne({email:email});
+  if(!data){
+    res.status(400).send({message:false});
+  }else{
+    res.status(200).send({message:true});
+  }
+
+}
 const profile_check = async (req, res) => {
   let email = req.user.email;
   console.log(email);
@@ -246,4 +256,5 @@ module.exports = {
   All_data,
   google_login,
   getData,
+  Profile_valid
 };
