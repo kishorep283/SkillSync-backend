@@ -18,6 +18,6 @@ router.post("/google-login",Auth_control.google_login);
 router.get("/profile-check",middleware,Auth_control.profile_check);
 router.post("/create-profile",upload.single("image"),middleware,Auth_control.profile);
 router.get("/profile_data/:email",middleware,Auth_control.getData);
-router.get("/AllData",Auth_control.All_data);
+router.get("/AllData?search=&tags=&job_title=&company=",Auth_control.All_data);
 module.exports=router;
 
