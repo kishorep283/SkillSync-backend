@@ -126,16 +126,15 @@ const profile = async (req, res) => {
     res.status(500).send({ message: "Error Occured At server" });
   }
 };
-const Profile_valid = async (req,res)=>{
-  let email =req.params.email;
-  let data = await model.profile.findOne({email:email});
-  if(!data){
-    res.status(400).send({message:false});
-  }else{
-    res.status(200).send({message:true});
+const Profile_valid = async (req, res) => {
+  let email = req.params.email;
+  let data = await model.profile.findOne({ email: email });
+  if (!data) {
+    res.status(400).send({ message: false });
+  } else {
+    res.status(200).send({ message: true });
   }
-
-}
+};
 const profile_check = async (req, res) => {
   let email = req.user.email;
   console.log(email);
@@ -151,27 +150,27 @@ const GetObjectURL = async (s3Key) => {
   const command = new GetObjectCommand({ Bucket: Bucketname, Key: s3Key });
   return await getSignedUrl(s3Clientconfig, command, { ExpiresIn: 604800 });
 };
-const Get_Profile =async(req,res)=>{
-  let id =req.params.id;
-  console.log(id)
-  let data = await model.profile.find({_id:id});
-  if(!data){
-    return res.status(404).send({message:"No User Found"});
-  }else{
+const Get_Profile = async (req, res) => {
+  let id = req.params.id;
+  console.log(id);
+  let data = await model.profile.find({ _id: id });
+  if (!data) {
+    return res.status(404).send({ message: "No User Found" });
+  } else {
     const files = await Promise.all(
       data.map(async ({ filename, image }) => ({
         filename: filename,
         fileUrl: await GetObjectURL(image),
       }))
     );
-    console.log(files)
+    console.log(files);
     let updateData = await model.profile.updateOne(
       { email: data[0].email },
       { $set: { file: files[0].fileUrl } }
     );
-    res.status(200).send({message:data});
+    res.status(200).send({ message: data });
   }
-}
+};
 const getData = async (req, res) => {
   let email = req.user.email;
   console.log(email);
@@ -198,74 +197,137 @@ const getData = async (req, res) => {
     // return res.send(data)
   }
 };
+// const All_data = async (req, res) => {
+//   let {search,skills,job_titles}=req.body;
+//   // res.send({"name":"hello"})
+//   console.log(job_titles)
+//   try {
+//     let data;
+//     if (search) {
+//       const searchData = await model.profile.find({
+//         $or: [
+//           { firstname: { $regex: search, $options: "i" } },
+//           { lastname: { $regex: search, $options: "i" } },
+//           { skills: { $regex: search, $options: "i" } },
+//           { company: { $regex: search, $options: "i" } },
+//         ],
+//       });
+
+//       if (searchData.length === 0) {
+//         return res.status(404).send({ message: "No matching profiles found" });
+//       }
+
+//       data = searchData;
+//     }
+//     // }else if(tags){
+//     //   const tagsData = await model.profile.find({
+//     //     skills: { $in: tags }
+//     //   })
+//     //   if(tagsData.length===0){
+//     //     return res.status(400).send({message:"No matching profiles found"});
+//     //   }
+//     //   data = tagsData;
+//     // }
+//     if(job_titles){
+//       const JobsData = await model.profile.find({
+//         job_title: { $regex: new RegExp(job_titles, "i") }
+//       })
+//       if(JobsData.length===0){
+//         return res.status(400).send({message:"NO matching profiles Found"});
+//       }
+//       console.log()
+//       data = JobsData;
+//     }
+//     // if(company){
+//     //   const CompanyData = await model.find({
+//     //     company: { $regex: new RegExp(company, "i") }
+//     //   })
+//     //   if(CompanyData.length===0){
+//     //     return res.status(404).send({message:"NO matching Profiles found"});
+//     //   }
+//     //   data=CompanyData;
+//     // }
+//     else {
+//       let AllData = await model.profile.find();
+
+//       if (AllData.length === 0) {
+//         return res.status(404).send({ message: "No Profiles Found" });
+//       }
+//       data = AllData;
+//     }
+//     const updatedData = await Promise.all(
+//         data.map(async (item) => {
+//         const fileUrl = item.image.startsWith("https") ? item.image : await GetObjectURL(item.image);
+//         console.log(fileUrl)
+//           return { ...item.toObject(), file: fileUrl };
+//         })
+//       );
+
+//       res.status(200).send({ message: updatedData });
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).send({ message: "Internal Server Error" });
+//   }
+// };
+
 const All_data = async (req, res) => {
+  const { search, skills, job_titles, company } = req.body;
+
   try {
-    const { search,tags,job_titles,company } = req.query;
-    let data;
-    if (search) {
-      const searchData = await model.profile.find({
+    let data = [];
+    if (search || skills || job_titles || company) {
+      const query = {
         $or: [
-          { firstname: { $regex: search, $options: "i" } },
-          { lastname: { $regex: search, $options: "i" } },
-          { skills: { $regex: search, $options: "i" } },
-          { company: { $regex: search, $options: "i" } },
+          ...(search
+            ? [
+                { firstname: { $regex: search, $options: "i" } },
+                { lastname: { $regex: search, $options: "i" } },
+                { company: { $regex: search, $options: "i" } },
+              ]
+            : []),
+          ...(skills?.length > 0
+            ? [
+                {
+                  skills: {
+                    $in: skills.map((skill) => new RegExp(skill, "i")),
+                  },
+                },
+              ]
+            : []),
+          ...(job_titles
+            ? [{ job_title: { $regex: new RegExp(job_titles, "i") } }]
+            : []),
+          ...(company
+            ? [{ company: { $regex: new RegExp(company, "i") } }]
+            : []),
         ],
-      });
+      };
 
-      if (searchData.length === 0) {
-        return res.status(404).send({ message: "No matching profiles found" });
-      }
+      data = await model.profile.find(query);
+    } else {
+      data = await model.profile.find();
+    }
 
-      data = searchData;
-    }else if(tags){
-      const tagsData = await model.profile.find({
-        skills: { $in: tags }
-      })
-      if(tagsData.length===0){
-        return res.status(400).send({message:"No matching profiles found"});
-      }
-      data = tagsData;
+    if (data.length === 0) {
+      return res.status(404).send({ message: "No matching profiles found" });
     }
-    else if(job_titles){
-      const JobsData = await model.profile.find({
-        job_title: { $regex: new RegExp(job_titles, "i") }
-      })
-      if(JobsData.length===0){
-        return res.status(400).send({message:"NO matching profiles Found"});
-      }
-      data = JobsData;
-    }
-    else if(company){
-      const CompanyData = await model.find({
-        company: { $regex: new RegExp(company, "i") }
-      })
-      if(CompanyData.length===0){
-        return res.status(400).send({message:"NO matching Profiles found"});
-      }
-      data=CompanyData;
-    }
-    else {
-      let AllData = await model.profile.find();
 
-      if (AllData.length === 0) {
-        return res.status(400).send({ message: "No Profiles Found" });
-      }
-      data = AllData;
-    }
     const updatedData = await Promise.all(
-        data.map(async (item) => {
-        const fileUrl = item.image.startsWith("https") ? item.image : await GetObjectURL(item.image);
-        console.log(fileUrl)
-          return { ...item.toObject(), file: fileUrl };
-        })
-      );
-  
-      res.status(200).send({ message: updatedData });
+      data.map(async (item) => {
+        const fileUrl = item.image.startsWith("https")
+          ? item.image
+          : await GetObjectURL(item.image);
+        return { ...item.toObject(), file: fileUrl };
+      })
+    );
+
+    res.status(200).send({ message: updatedData });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ message: "Internal Server Error" });
   }
 };
+
 module.exports = {
   register,
   root,
@@ -277,5 +339,5 @@ module.exports = {
   google_login,
   getData,
   Profile_valid,
-  Get_Profile
+  Get_Profile,
 };
