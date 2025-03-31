@@ -302,7 +302,7 @@ const All_data = async (req, res) => {
             : []),
         ],
       };
-
+      console.log(query);
       data = await model.profile.find(query);
     } else {
       data = await model.profile.find();
